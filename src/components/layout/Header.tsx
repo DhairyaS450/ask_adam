@@ -1,10 +1,17 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Menu } from 'lucide-react';
 
-const Header = () => {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
-    <header className="w-full p-4 bg-white dark:bg-fitness-dark text-fitness-dark dark:text-white shadow-md">
+    <header className="w-full p-4 bg-white dark:bg-fitness-dark text-fitness-dark dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:relative">
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative w-10 h-10 overflow-hidden rounded-full">
@@ -40,9 +47,19 @@ const Header = () => {
           </Link>
         </nav>
         
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
             Get Started
+          </button>
+        </div>
+
+        <div className="md:hidden">
+          <button
+            onClick={onMenuClick}
+            className="text-fitness-dark dark:text-white focus:outline-none"
+            aria-label="Open sidebar menu"
+          >
+            <Menu size={24} />
           </button>
         </div>
       </div>

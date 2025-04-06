@@ -15,6 +15,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ask Adam",
   description: "Ask Adam - Your Personal Fitness Assistant",
+  manifest: "/manifest.json", 
+  themeColor: "#4CAF50", 
+  appleWebApp: { 
+    capable: true,
+    statusBarStyle: "default",
+    title: "Ask Adam",
+  },
 };
 
 export default function RootLayout({
@@ -24,6 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

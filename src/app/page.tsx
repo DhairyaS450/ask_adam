@@ -1,16 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/layout/Header';
 import Chat from '@/components/chat/Chat';
+import Sidebar from '@/components/layout/Sidebar';
 
 export default function Home() {
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 relative md:static">
+      <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
       <div className="flex flex-col flex-1">
-        <Header />
+        <Header onMenuClick={toggleSidebar} />
         
-        <main className="flex-1 p-4 overflow-hidden">
+        <main className="flex-1 p-4 overflow-hidden pt-20 md:pt-4">
           <div className="max-w-6xl mx-auto h-full flex flex-col">
             <div className="mb-6">
               
