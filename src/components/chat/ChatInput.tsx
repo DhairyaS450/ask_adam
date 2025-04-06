@@ -90,7 +90,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
       reader.onloadend = () => {
         const base64String = (reader.result as string).split(',')[1];
         setSelectedImage(base64String);
-        setMessage("Analyze my form from this image.");
       };
       reader.readAsDataURL(file);
     }
