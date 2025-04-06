@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   return (
-    <header className="w-full p-4 bg-white dark:bg-fitness-dark text-fitness-dark dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:relative">
+    <header className="w-full p-4 bg-white dark:bg-black text-gray-800 dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:relative">
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative w-10 h-10 overflow-hidden rounded-full">
@@ -27,22 +27,22 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </Link>
         
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Home
           </Link>
-          <Link href="/workout" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/workout" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Workouts
           </Link>
-          <Link href="/nutrition" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/nutrition" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Nutrition
           </Link>
-          <Link href="/form-check" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/form-check" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Form Check
           </Link>
-          <Link href="/progress" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/progress" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Progress
           </Link>
-          <Link href="/settings" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+          <Link href="/settings" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
             Settings
           </Link>
         </nav>

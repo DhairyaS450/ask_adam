@@ -21,7 +21,7 @@ const Message: React.FC<MessageProps> = ({ content, isUser, timestamp = new Date
       <div className={`flex ${isUser ? 'flex-row-reverse' : 'flex-row'} max-w-[80%]`}>
         <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
           {isUser ? (
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-gray-500 dark:text-white dark:bg-fitness-dark">
+            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-gray-500 dark:text-white dark:bg-gray-600">
               <UserIcon className="w-6 h-6" />
             </div>
           ) : (
@@ -38,7 +38,7 @@ const Message: React.FC<MessageProps> = ({ content, isUser, timestamp = new Date
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
           <div
             className={`rounded-2xl px-4 py-3 ${ isUser
-                ? 'bg-blue-100 text-gray-800 dark:text-white dark:bg-fitness-dark'
+                ? 'bg-blue-100 text-gray-800 dark:text-white dark:bg-gray-600'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
               }`}
           >

@@ -23,14 +23,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 w-64 h-full bg-white dark:bg-fitness-dark shadow-xl transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-0 left-0 z-40 w-64 h-full bg-white dark:bg-black shadow-xl transform transition-transform duration-300 ease-in-out md:hidden ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Sidebar"
       >
         <div className="h-full px-3 py-4 overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-xl font-semibold text-fitness-dark dark:text-white">Menu</span>
+            <span className="text-xl font-semibold text-gray-800 dark:text-white">Menu</span>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"

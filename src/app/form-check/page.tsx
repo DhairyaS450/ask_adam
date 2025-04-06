@@ -21,7 +21,7 @@ export default function FormCheckPage() {
         <main className="flex-1 p-4 overflow-hidden pt-20 md:pt-4">
           <div className="max-w-4xl mx-auto h-full flex flex-col">
             <h1 className="text-2xl font-bold mb-6 text-fitness-dark dark:text-white">AI Form Check</h1>
-            <div className="flex-1 overflow-hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <FormCheckUI />
             </div>
           </div>
