@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Part } from '@google/generative-ai';
+import { GoogleGenerativeAI, Part, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 // --- ADAM System Prompt ---
 const ADAM_SYSTEM_PROMPT = `
@@ -15,7 +15,7 @@ Deliver **personalized, safe, effective, and time-efficient** fitness guidance.
     *   Goals (weight loss, muscle gain, endurance, etc.)
     *   Fitness Level (beginner, intermediate, advanced)
     *   Available Time (offer 10, 20-30, 45-60 min options & modular routines)
-    *   Medical Conditions/Limitations (**Always ask first!**)
+    *   Medical Conditions/Limitations (ask about it)
     *   Preferences & Environment (home, gym, limited space)
 *   **Media Analysis (Current Focus: Images):**
     *   Analyze uploaded photos to assess workout space and available equipment.
@@ -31,13 +31,18 @@ Deliver **personalized, safe, effective, and time-efficient** fitness guidance.
     *   Regularly prompt for feedback ("How does that sound?", "Is this pace comfortable?").
 
 ## Critical Interaction Rules:
-*   **SAFETY FIRST:** This is non-negotiable.
-    *   **ALWAYS inquire about injuries, limitations, or medical conditions BEFORE suggesting exercises.**
+*   **SAFETY FIRST:**
+    *   Inquire about injuries, limitations, or medical conditions before suggesting exercises.
     *   Advise consulting a healthcare professional for medical concerns or pre-existing conditions.
     *   Warn against exercises that seem inappropriate based on user input or potential hazards detected in images.
 *   **Personalization is Paramount:** Avoid generic, canned responses. Tailor advice specifically to the individual user's context.
 *   **Accuracy & Responsibility:** Provide scientifically sound fitness advice. Do NOT give potentially harmful recommendations. Do not provide medical advice; defer to professionals.
 *   **Maintain Persona:** Consistently embody the ADAM personality traits. Be supportive, not judgmental. Frame corrections positively ("Let's try adjusting your stance slightly like this..." instead of "Don't do that").
+
+## Video Analysis Specifics:
+*   When analyzing form from video, focus on key aspects like posture, joint alignment, range of motion, and movement tempo.
+*   Provide specific, actionable feedback. Compare the user's form to correct execution.
+*   Be encouraging even when correcting form.
 
 ## Overall Goal:
 Be the most supportive, knowledgeable, and effective AI fitness partner possible, empowering users to safely achieve their unique health and fitness goals.
@@ -130,22 +135,79 @@ export async function getChatResponse(messages: any[], imageData?: string) {
   }
 }
 
-// Function to analyze workout form from video (placeholder, uses flash as requested)
-export async function analyzeWorkoutForm(videoData: any) {
+// Helper function to convert File to GenerativePart
+async function fileToGenerativePart(file: File): Promise<Part> {
+  const base64Data = await new Promise<string>((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(',')[1];
+      resolve(base64String);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  return {
+    inlineData: {
+      data: base64Data,
+      mimeType: file.type
+    },
+  };
+}
+
+function validateVideo(file: File) {
+  const maxSize = 20 * 1024 * 1024; // 20MB
+  const allowedTypes = ['video/mp4', 'video/quicktime'];
+
+  if (file.size > maxSize) {
+    throw new Error('File size too large');
+  }
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Unsupported file type');
+  }
+}
+
+// Function to analyze workout form using Gemini 1.5 Pro and inlineData
+export async function analyzeWorkoutForm(videoFile: File) {
   try {
+    // 1. Validate the video file
+    validateVideo(videoFile);
+    console.log(`Processing file: ${videoFile.name} (${videoFile.type})...`);
+
+    // 2. Convert file to inline Base64 data part
+    const videoPart = await fileToGenerativePart(videoFile);
+    console.log("Video converted to GenerativePart.");
+
+    // 3. Get the generative model (Gemini 1.5 Pro)
     const genAI = getGeminiAPI();
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash',
       systemInstruction: ADAM_SYSTEM_PROMPT
     });
     
-    const prompt = "Analyze this workout video frame by frame and provide feedback.";
-    
-    console.warn("Video analysis with gemini-2.0-flash is complex and not fully implemented here.");
-    return "Video analysis feature is under development.";
+    // 4. Prepare the prompt for analysis
+    const prompt = "Please analyze the user's form in the provided video. Identify the exercise if possible. Focus on posture, joint alignment, range of motion, and tempo. Provide specific, actionable feedback for improvement in a friendly and encouraging tone, consistent with the ADAM persona.";
+
+    // 5. Generate content using the prompt and the inline video data
+    console.log("Sending analysis request with inline video data to Gemini 2.0 Flash...");
+    const result = await model.generateContent([prompt, videoPart]);
+
+    const response = await result.response;
+    const text = response.text();
+    console.log("Analysis received:", text);
+    return text;
 
   } catch (error) {
-    console.error('Error analyzing workout form (video placeholder):' , error);
-    return 'Sorry, I encountered an error analyzing your workout form. Please try again later.';
+    console.error('Error analyzing workout form:', error);
+    if (error instanceof Error) {
+        if (error.message === 'File size too large') {
+             return `Video file is too large. Please upload a file smaller than 20MB.`;
+        } else if (error.message === 'Unsupported file type') {
+             return `Unsupported video format. Please upload MP4 or MOV files.`;
+        } else if (error.message.includes('quota')) {
+             return 'Sorry, the analysis request could not be completed due to usage limits. Please try again later.';
+        } // Add more specific error checks if needed
+    }   
+    return 'Sorry, an unexpected error occurred while analyzing your workout form. Please try again later.';
   }
 }

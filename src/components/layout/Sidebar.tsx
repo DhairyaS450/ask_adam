@@ -7,10 +7,20 @@ import {
   CameraIcon,
   BookOpenIcon,
   ChartBarIcon, 
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  VideoCameraIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
+  const navigation = [
+    { name: 'Home', href: '/', icon: HomeIcon },
+    { name: 'Workout Plans', href: '/workout', icon: ClipboardDocumentListIcon },
+    { name: 'Nutrition', href: '/nutrition', icon: BookOpenIcon },
+    { name: 'Form Check', href: '/form-check', icon: VideoCameraIcon },
+    { name: 'Progress', href: '/progress', icon: ChartBarIcon },
+    { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+  ];
+
   return (
     <aside className="h-screen w-16 lg:w-64 bg-fitness-dark text-white fixed left-0 top-0 overflow-y-auto transition-all duration-300 ease-in-out z-10">
       <div className="p-4 flex flex-col h-full">
@@ -19,15 +29,12 @@ const Sidebar = () => {
         </div>
         
         <nav className="flex-1 space-y-2 mt-10">
-          <SidebarLink icon={<HomeIcon className="w-6 h-6" />} label="Home" href="/" />
-          <SidebarLink icon={<ClipboardDocumentListIcon className="w-6 h-6" />} label="Workout Plans" href="/workout" />
-          <SidebarLink icon={<BookOpenIcon className="w-6 h-6" />} label="Nutrition" href="/nutrition" />
-          <SidebarLink icon={<CameraIcon className="w-6 h-6" />} label="Form Check" href="/form-check" />
-          <SidebarLink icon={<ChartBarIcon className="w-6 h-6" />} label="Progress" href="/progress" />
+          {navigation.map((item) => (
+            <SidebarLink key={item.name} icon={<item.icon className="w-6 h-6" />} label={item.name} href={item.href} />
+          ))}
         </nav>
         
         <div className="mt-auto pb-4">
-          <SidebarLink icon={<Cog6ToothIcon className="w-6 h-6" />} label="Settings" href="/settings" />
         </div>
       </div>
     </aside>

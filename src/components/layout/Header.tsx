@@ -32,6 +32,12 @@ const Header = () => {
           <Link href="/form-check" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
             Form Check
           </Link>
+          <Link href="/progress" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+            Progress
+          </Link>
+          <Link href="/settings" className="text-fitness-dark dark:text-white hover:text-primary transition-colors">
+            Settings
+          </Link>
         </nav>
         
         <div className="flex items-center gap-4">
