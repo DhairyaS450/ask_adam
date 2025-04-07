@@ -49,7 +49,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         
         <div className="hidden md:flex items-center gap-4">
           <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
-            Get Started
+            <Link href="/login-signup" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
+              Login/Signup
+            </Link>
           </button>
         </div>
 
