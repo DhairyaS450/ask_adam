@@ -1,6 +1,11 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { 
+  getAuth, 
+  setPersistence, 
+  browserLocalPersistence, 
+  Auth 
+} from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // Get Firebase configuration from environment variables
 const firebaseConfig = {
@@ -24,18 +29,50 @@ console.log('Firebase configuration check:', {
   measurementIdExists: !!firebaseConfig.measurementId
 });
 
-// Check if Firebase app has already been initialized
+// Initialize Firebase
 let firebaseApp: FirebaseApp;
-if (!getApps().length) {
-  firebaseApp = initializeApp(firebaseConfig);
-  console.log('Firebase initialized successfully');
-} else {
+let auth: Auth;
+let db: Firestore;
+
+if (typeof window !== 'undefined' && !getApps().length) {
+  try {
+    firebaseApp = initializeApp(firebaseConfig);
+    auth = getAuth(firebaseApp);
+    db = getFirestore(firebaseApp);
+    
+    // Set persistence
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => {
+        console.log('Firebase Auth persistence set to local.');
+      })
+      .catch((error) => {
+        console.error('Error setting Firebase Auth persistence:', error);
+      });
+
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+    // Handle initialization error appropriately
+    // For safety, assign default/null values or re-throw
+    // @ts-ignore - Initialize with placeholder if error occurs
+    if (!firebaseApp) firebaseApp = {} as FirebaseApp;
+    // @ts-ignore 
+    if (!auth) auth = {} as Auth;
+    // @ts-ignore
+    if (!db) db = {} as Firestore;
+  }
+} else if (getApps().length) {
   firebaseApp = getApps()[0];
+  auth = getAuth(firebaseApp);
+  db = getFirestore(firebaseApp);
   console.log('Using existing Firebase app');
+} else {
+  // Handle server-side rendering or environments without 'window'
+  // Initialize with placeholder/null objects or throw an error
+  console.warn('Firebase cannot be initialized - window is undefined (SSR?). Assigning placeholders.');
+  firebaseApp = {} as FirebaseApp;
+  auth = {} as Auth;
+  db = {} as Firestore;
 }
 
-// Initialize Firebase services
-const db = getFirestore(firebaseApp);
-const auth = getAuth(firebaseApp);
-
-export { firebaseApp, db, auth }; 
+export { firebaseApp, auth, db };

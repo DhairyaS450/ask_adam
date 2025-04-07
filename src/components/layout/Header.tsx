@@ -4,12 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const { user } = useAuth();
+  
   return (
     <header className="w-full p-4 bg-white dark:bg-black text-gray-800 dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:relative">
       <div className="container mx-auto flex items-center justify-between">
@@ -48,11 +53,19 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </nav>
         
         <div className="hidden md:flex items-center gap-4">
-          <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
-            <Link href="/login-signup" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
-              Login/Signup
-            </Link>
-          </button>
+          {user ? (
+            <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
+              <button onClick={() => signOut(auth)} className="text-gray-800 dark:text-white hover:text-primary transition-colors">
+                {"Logout"}
+              </button>
+            </button>
+          ) : (
+            <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
+              <Link href="/login-signup" className="text-gray-800 dark:text-white hover:text-primary transition-colors">
+                {"Login/Signup"}
+              </Link>
+            </button>
+          )}
         </div>
 
         <div className="md:hidden">

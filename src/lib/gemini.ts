@@ -83,18 +83,19 @@ const getGeminiAPI = () => {
 };
 
 // Function to get a response from Gemini for text and images
-export async function getChatResponse(messages: any[], imageData?: string) {
+export async function getChatResponse(messages: any[], userProfile: any, imageData?: string) {
   try {
     const genAI = getGeminiAPI();
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash', 
       systemInstruction: ADAM_SYSTEM_PROMPT 
-    });
+    }); 
     
     const historyMessages = messages.filter(msg => msg.role !== 'model' || messages.indexOf(msg) !== 0);
     
-    const lastUserMessageContent = messages.length > 0 ? messages[messages.length - 1].content : "";
-
+    let lastUserMessageContent = messages.length > 0 ? messages[messages.length - 1].content : "";
+    lastUserMessageContent += JSON.stringify(userProfile)
+    
     const messageParts: (string | Part)[] = [lastUserMessageContent || "Analyze the provided media."];
     if (imageData) {
       messageParts.push({

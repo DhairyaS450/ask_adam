@@ -3,6 +3,7 @@ import Message from './Message';
 import ChatInput from './ChatInput';
 import { getChatResponse } from '@/lib/gemini';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type ChatMessage = {
   id: string;
@@ -10,6 +11,19 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   timestamp: Date;
 };
+
+interface UserProfile {
+  name?: string;
+  height?: string;
+  weight?: string;
+  age?: string;
+  gender?: string;
+  goals?: string[];
+  medicalConditions?: string;
+  injuries?: string;
+  dietaryPreferences?: string;
+  fitnessLevel?: 'beginner' | 'intermediate' | 'advanced';
+}
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -22,6 +36,7 @@ const Chat: React.FC = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { user, userData } = useAuth();
 
   useEffect(() => {
     scrollToBottom();
@@ -45,18 +60,35 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     let response = "";
+    let userProfile: UserProfile | null = null;
+
+    if (userData?.preferences) {
+      userProfile = {
+        name: userData.preferences.name,
+        height: userData.preferences.height,
+        weight: userData.preferences.weight,
+        age: userData.preferences.age,
+        gender: userData.preferences.gender,
+        goals: userData.preferences.goals,
+        medicalConditions: userData.preferences.medicalConditions,
+        injuries: userData.preferences.injuries,
+        dietaryPreferences: userData.preferences.dietaryPreferences,
+        fitnessLevel: userData.preferences.fitnessLevel,
+      };
+    }
 
     try {
       const messageHistoryForApi = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'model',
         content: msg.content,
-      }));
+      })) as { role: 'user' | 'model'; content: string }[];
+
       messageHistoryForApi.push({
         role: 'user',
         content: content,
       });
 
-      response = await getChatResponse(messageHistoryForApi, imageData);
+      response = await getChatResponse(messageHistoryForApi, userProfile, imageData);
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -101,7 +133,7 @@ const Chat: React.FC = () => {
           </div>
           
           <div className="flex flex-col items-start">
-            <div className="rounded-2xl px-5 py-3 bg-gray-100 dark:bg-fitness-dark text-gray-800 dark:text-white">
+            <div className="rounded-2xl px-5 py-3 bg-gray-100 dark:bg-black text-gray-800 dark:text-white">
               <div className="flex items-center h-6">
                 <motion.div 
                   className="w-2 h-2 rounded-full bg-primary"

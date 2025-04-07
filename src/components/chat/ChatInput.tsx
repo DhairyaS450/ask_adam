@@ -184,7 +184,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           } transition-colors`}
           disabled={!(message.trim() || selectedImage) || isLoading}
         >
-          <PaperAirplaneIcon className="w-5 h-5 text-white" />
+          <PaperAirplaneIcon className="w-5 h-5 dark:text-white text-black" />
         </button>
       </div>
     </form>

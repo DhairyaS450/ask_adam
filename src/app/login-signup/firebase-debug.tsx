@@ -31,7 +31,7 @@ export default function FirebaseDebugger() {
   }, []);
   
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div className="p-4 bg-white text-black dark:bg-gray-800 dark:text-white rounded-lg shadow">
       <h2 className="text-xl font-bold mb-4">Firebase Configuration Status</h2>
       <p className="mb-4 text-gray-600 dark:text-gray-400">
         This component helps debug Firebase configuration issues.
