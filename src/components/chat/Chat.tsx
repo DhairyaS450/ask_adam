@@ -29,7 +29,7 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: "Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. How can I assist you today?",
+      content: "Note: You should setup your profile first in settings.\n Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. How can I assist you today?",
       role: 'assistant',
       timestamp: new Date(),
     },
