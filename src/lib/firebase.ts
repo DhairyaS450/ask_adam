@@ -56,9 +56,9 @@ if (typeof window !== 'undefined' && !getApps().length) {
     // For safety, assign default/null values or re-throw
     // @ts-expect-error - Initialize with placeholder if error occurs
     if (!firebaseApp) firebaseApp = {} as FirebaseApp;
-    // @ts-expect-error 
+    // @ts-expect-error - Initialize with placeholder if error occurs
     if (!auth) auth = {} as Auth;
-    // @ts-expect-error
+    // @ts-expect-error - Initialize with placeholder if error occurs
     if (!db) db = {} as Firestore;
   }
 } else if (getApps().length) {
