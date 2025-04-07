@@ -54,11 +54,11 @@ if (typeof window !== 'undefined' && !getApps().length) {
     console.error('Firebase initialization error:', error);
     // Handle initialization error appropriately
     // For safety, assign default/null values or re-throw
-    // @ts-ignore - Initialize with placeholder if error occurs
+    // @ts-expect-error - Initialize with placeholder if error occurs
     if (!firebaseApp) firebaseApp = {} as FirebaseApp;
-    // @ts-ignore 
+    // @ts-expect-error 
     if (!auth) auth = {} as Auth;
-    // @ts-ignore
+    // @ts-expect-error
     if (!db) db = {} as Firestore;
   }
 } else if (getApps().length) {
