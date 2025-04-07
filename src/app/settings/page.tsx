@@ -144,7 +144,7 @@ function SettingsPageContent() {
             <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
               
               {/* Personal Information */}
-              <div className="bg-white shadow rounded-lg p-6 space-y-6">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
                 <h2 className="text-xl font-semibold border-b pb-2">Personal Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -205,7 +205,7 @@ function SettingsPageContent() {
               </div>
 
               {/* Fitness Profile */}
-              <div className="bg-white shadow rounded-lg p-6 space-y-6">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
                 <h2 className="text-xl font-semibold border-b pb-2">Fitness Profile</h2>
                 
                 <div>
@@ -238,7 +238,7 @@ function SettingsPageContent() {
               </div>
 
               {/* Health Information */}
-              <div className="bg-white shadow rounded-lg p-6 space-y-6">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
                 <h2 className="text-xl font-semibold border-b pb-2">Health Information</h2>
                 
                 <div>
@@ -286,7 +286,7 @@ function SettingsPageContent() {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black dark:text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
                 >
                   {isSaving ? 'Saving...' : 'Save Settings'}
                 </button>
