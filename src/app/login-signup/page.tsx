@@ -2,14 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  browserLocalPersistence, 
+  setPersistence 
+} from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db, firebaseApp } from '@/lib/firebase';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import FirebaseDebugger from './firebase-debug';
+import { useRouter } from 'next/navigation';
 
 export default function LoginSignupPage() {
+  const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   
@@ -30,6 +37,15 @@ export default function LoginSignupPage() {
     try {
       console.log('Firebase app initialized:', !!firebaseApp);
       console.log('Auth service available:', !!auth);
+      
+      // Set persistence to local when component mounts
+      setPersistence(auth, browserLocalPersistence)
+        .then(() => {
+          console.log('Persistence set to browserLocalPersistence');
+        })
+        .catch((error) => {
+          console.error('Error setting persistence:', error);
+        });
     } catch (err) {
       console.error('Firebase initialization error:', err);
     }
@@ -48,6 +64,13 @@ export default function LoginSignupPage() {
     setConfirmPassword('');
     setError('');
     setSuccess('');
+  };
+
+  const redirectToHome = () => {
+    // Short delay to show success message before redirecting
+    setTimeout(() => {
+      router.push('/');
+    }, 1500);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -78,8 +101,8 @@ export default function LoginSignupPage() {
         });
       }
 
-      setSuccess('Login successful!');
-      // Redirect or other post-login logic can be added here
+      setSuccess('Login successful! Redirecting...');
+      redirectToHome();
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
       console.error(err);
@@ -121,9 +144,8 @@ export default function LoginSignupPage() {
         createdAt: new Date().toISOString(),
       });
 
-      setSuccess('Account created successfully!');
-      // Optional: auto-switch to login form
-      // setIsLogin(true);
+      setSuccess('Account created successfully! Redirecting...');
+      redirectToHome();
     } catch (err: any) {
       setError(err.message || 'An error occurred during signup');
       console.error(err);
