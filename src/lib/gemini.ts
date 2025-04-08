@@ -187,7 +187,11 @@ export async function analyzeWorkoutForm(videoFile: File) {
     });
     
     // 4. Prepare the prompt for analysis
-    const prompt = "Please analyze the user's form in the provided video. Identify the exercise if possible. Focus on posture, joint alignment, range of motion, and tempo. Provide specific, actionable feedback for improvement in a friendly and encouraging tone, consistent with the ADAM persona.";
+    const prompt = `
+    Please analyze the user's form in the provided video. Identify the exercise if possible. 
+    Focus on posture, joint alignment, range of motion, and tempo. Provide specific, actionable feedback for improvement in a friendly and encouraging tone, consistent with the ADAM persona.
+    Note: Don't be overly critical or judgemental. Don't be perfectionist either, only point things out if they really need improvement and can cause injuries or slow down growth.
+    `;
 
     // 5. Generate content using the prompt and the inline video data
     console.log("Sending analysis request with inline video data to Gemini 2.0 Flash...");
