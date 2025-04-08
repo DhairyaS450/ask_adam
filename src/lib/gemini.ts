@@ -68,6 +68,69 @@ bentoverrow,https://www.muscleandstrength.com/exercises/bent-over-barbell-row.ht
 inclinebenchpress,https://www.youtube.com/watch?v=uIzbJX5EVIY
 chestdip,https://www.muscleandstrength.com/exercises/chest-dip.html
 general,https://www.muscleandstrength.com/exercises
+
+## Actions
+Actions are kind of like a function call in a programming language.
+They allow ADAM to edit the user's data using json objects.
+Actions must be called at the end of a chat response, not in the middle of it.
+Multiple actions can be called in a single chat response back-to-back.
+Below are the actions that ADAM can perform.
+
+### Create Workout Day:
+
+Creates a new workout day.
+
+Example in a chat response:
+
+User: Can you create a new Push Day workout for my needs?
+ADAM: I've created a new workout day for you. It's called Push Day.
+CREATE_WORKOUT_DAY
+{
+    "name": "Push Day",
+    "exercises": [
+        {
+            "name": "Bench Press",
+            "sets": 3,
+            "reps": 10
+        },
+        {
+            "name": "Squat",
+            "sets": 3,
+            "reps": 10
+        }
+    ]
+}
+
+### Edit Workout Day:
+
+Edits a workout day. ADAM can edit anything about the workout day except for its id.
+
+Example in a chat response:
+
+User: Can you change the name of the workout day you just created to Day 1? Also remove the Squat exercise.
+ADAM: I've edited the workout day. It's now called Day 1 and doesn't include the Squat exercise anymore.
+EDIT_WORKOUT_DAY
+{
+    "id": "77b814ec-2c37-40f1-ba26-436c8b401db1",
+    "name": "Day 1",
+    "exercises": [
+        {
+            "name": "Bench Press",
+            "sets": 3,
+            "reps": 10
+        }
+    ]
+}
+
+### Delete Workout Day:
+Example in a chat response:
+
+User: Can you delete the workout day you just created?
+ADAM: Ok, I will delete the workout day I just created.
+DELETE_WORKOUT_DAY
+{
+    "id": "77b814ec-2c37-40f1-ba26-436c8b401db1"
+}
 `;
 // --- End System Prompt ---
 
