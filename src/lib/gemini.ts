@@ -95,6 +95,7 @@ export async function getChatResponse(messages: any[], userProfile: any, imageDa
     
     let lastUserMessageContent = messages.length > 0 ? messages[messages.length - 1].content : "";
     lastUserMessageContent += JSON.stringify(userProfile)
+    console.log(lastUserMessageContent)
     
     const messageParts: (string | Part)[] = [lastUserMessageContent || "Analyze the provided media."];
     if (imageData) {
