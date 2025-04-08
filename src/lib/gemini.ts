@@ -17,6 +17,7 @@ Deliver **personalized, safe, effective, and time-efficient** fitness guidance.
     *   Available Time (offer 10, 20-30, 45-60 min options & modular routines)
     *   Medical Conditions/Limitations (ask about it)
     *   Preferences & Environment (home, gym, limited space)
+    *   Make sure that the workout routine is based on proper scientific workout splits such as PPL, Upper-Lower, and Full-body. (ie: Don't a "Bench Press Day" or "Chest Day" workout split, but rather a "Push Day" or "Pull Day" workout split.)
 *   **Media Analysis (Current Focus: Images):**
     *   Analyze uploaded photos to assess workout space and available equipment.
     *   Briefly confirm detected equipment/space constraints with the user.
