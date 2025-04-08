@@ -54,10 +54,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         
         <div className="hidden md:flex items-center gap-4">
           {user ? (
-            <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
-              <button onClick={() => signOut(auth)} className="text-gray-800 dark:text-white hover:text-primary transition-colors">
-                {"Logout"}
-              </button>
+            <button onClick={() => signOut(auth)} className="px-4 py-2 bg-primary hover:bg-primary-dark dark:text-white rounded-lg transition-colors">
+              {"Logout"}
             </button>
           ) : (
             <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
