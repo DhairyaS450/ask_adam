@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, Part, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import { parseGeminiResponse } from './gemini-actions';
+import { parseAndExecuteActions } from './gemini-actions';
 
 // --- ADAM System Prompt ---
 const ADAM_SYSTEM_PROMPT = `
@@ -188,8 +188,7 @@ export async function getChatResponse(messages: any[], userProfile: any, imageDa
       const result = await chat.sendMessage(messageParts);
       const response = await result.response;
       const text = response.text();
-      const actions = parseGeminiResponse(text);
-      console.log("actions", actions);
+      parseAndExecuteActions(text);
       return text;
     } else {
       const result = await model.generateContent(messageParts);
