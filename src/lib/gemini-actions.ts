@@ -213,14 +213,33 @@ export const ACTION_MARKERS = [
   'CREATE_WORKOUT_DAY',
   'EDIT_WORKOUT_DAY',
   'DELETE_WORKOUT_DAY',
+  'UPDATE_PROFILE',
 ] as const;
 
 type ActionType = typeof ACTION_MARKERS[number];
 
 interface ParsedResponse {
   textResponse: string;
-  actions: { type: ActionType; data: any }[];
+  actions: { type: string; data: any }[];
 }
+
+/**
+ * Cleans a JSON string by removing markdown code block syntax and other formatting
+ * @param {string} jsonStr - The JSON string to clean
+ * @returns {string} - The cleaned JSON string
+ */
+const cleanJsonString = (jsonStr: string) => {
+  // Remove markdown code block markers at the beginning (```json, ```, etc.)
+  let cleaned = jsonStr.replace(/^```(\w+)?\s*/, '');
+  
+  // Remove trailing code block markers
+  cleaned = cleaned.replace(/\s*```$/, '');
+  
+  // Trim whitespace
+  cleaned = cleaned.trim();
+  
+  return cleaned;
+};
 
 /**
  * Parses a Gemini response string to separate the conversational text
@@ -229,58 +248,62 @@ interface ParsedResponse {
  * @returns An object containing the clean text response and an array of identified actions.
  */
 export function parseGeminiResponse(responseText: string): ParsedResponse {
-  console.log("Parsing Gemini response:", responseText);
-  let currentText = responseText.trim();
-  const actions: { type: ActionType; data: any }[] = [];
+  // Split response to extract the message part and actions part
+  const parts = responseText.split(/Actions/);
+  const message = parts[0].trim();
 
-  // Iterate as long as action markers are found at the *end* of the remaining text
-  let actionFoundInIteration;
-  do {
-    actionFoundInIteration = false;
-    for (const marker of ACTION_MARKERS) {
-      // Check if the text ends with the marker preceded by a newline (or start of string)
-      const markerIndex = currentText.lastIndexOf(`\n${marker}`);
-      if (markerIndex !== -1 && currentText.endsWith(marker) || (markerIndex === -1 && currentText.startsWith(marker))) {
-         // Temporary split point: right before the marker or at the start
-         const splitPoint = markerIndex === -1 ? 0 : markerIndex;
-         const potentialJsonBlock = currentText.substring(splitPoint + (markerIndex === -1 ? marker.length : marker.length + 1)).trim(); // +1 for newline
+  if (!message) {
+    console.error("Empty message part in response");
+    return {
+      textResponse: "I received your message but couldn't generate a proper response.",
+      actions: []
+    };
+  }
+  
+  // If there's no action part, return just the message
+  if (parts.length === 1) {
+    return {
+      textResponse: message,
+      actions: []
+    };
+  }
 
-          if (potentialJsonBlock.startsWith('{') && potentialJsonBlock.endsWith('}')) {
-                try {
-                    const jsonData = JSON.parse(potentialJsonBlock);
-                    actions.unshift({ type: marker, data: jsonData }); // Add action to the beginning (reverse order)
-                    currentText = currentText.substring(0, splitPoint).trim(); // Remove the action and JSON block
-                    actionFoundInIteration = true;
-                    break; // Found an action, restart the loop for the remaining text
-                } catch (e) {
-                    console.warn(`Could not parse JSON for action ${marker}:`, e);
-                    // Proceed without modifying currentText, potentially leaving the malformed action
-                }
-            }
-        // If it doesn't look like JSON, assume it's just part of the text response
-      }
-       else {
-         // Handle case where marker might be followed by JSON directly without newline (robustness)
-         const directMarkerIndex = currentText.lastIndexOf(marker + '\n{'); // Look for marker directly followed by JSON start
-         if (directMarkerIndex !== -1 && currentText.substring(directMarkerIndex + marker.length).trim().startsWith('{')) {
-             const potentialJsonBlock = currentText.substring(directMarkerIndex + marker.length).trim();
-              if (potentialJsonBlock.endsWith('}')) {
-                   try {
-                       const jsonData = JSON.parse(potentialJsonBlock);
-                       actions.unshift({ type: marker, data: jsonData });
-                       currentText = currentText.substring(0, directMarkerIndex).trim();
-                       actionFoundInIteration = true;
-                       break;
-                   } catch (e) {
-                       console.warn(`Could not parse JSON for action ${marker} (direct):`, e);
-                   }
-               }
-           }
-       }
+  // Extract actions
+  const actions: { type: string; data: any }[] = [];
+  const actionBlocks = parts[1].trim().split(/\n(?=[A-Z_]+\n)/);
+  
+  for (const block of actionBlocks) {
+    const trimmedBlock = block.trim();
+    if (!trimmedBlock) continue;
+    
+    // Split by the first newline to separate action type from data
+    const firstNewlineIndex = trimmedBlock.indexOf('\n');
+    if (firstNewlineIndex === -1) continue;
+    
+    const actionType = trimmedBlock.substring(0, firstNewlineIndex).trim();
+    let jsonStr = trimmedBlock.substring(firstNewlineIndex).trim();
+    
+    if (!actionType || !jsonStr) continue;
+    
+    try {
+      // Clean the JSON string before parsing
+      jsonStr = cleanJsonString(jsonStr);
+      
+      // Log the cleaned JSON string for debugging
+      console.info(`Attempting to parse cleaned JSON: ${jsonStr}`);
+      
+      const data = JSON.parse(jsonStr);
+      actions.push({
+        type: actionType,
+        data
+      });
+    } catch (e) {
+      console.error(`Error parsing JSON data for action ${actionType}:`, e);
+      console.error(`JSON string was:`, jsonStr);
     }
-  } while (actionFoundInIteration);
+  }
 
-  return { textResponse: currentText, actions };
+  return { textResponse: message, actions };
 }
 
 /**

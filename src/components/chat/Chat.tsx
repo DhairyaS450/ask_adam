@@ -5,7 +5,8 @@ import { getChatResponse } from '@/lib/gemini';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { ACTION_MARKERS } from '@/lib/gemini-actions';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export type ChatMessage = {
   id: string;
@@ -34,7 +35,7 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: "Note: You should setup your profile first in settings.\n Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. How can I assist you today?",
+      content: "Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. However, to make it more personalized, you should go to the settings tab and check out your profile. How can I assist you today?",
       role: 'assistant',
       timestamp: new Date(),
     },
@@ -66,6 +67,7 @@ const Chat: React.FC = () => {
 
     let response = "";
     let userProfile: UserProfile | null = null;
+    let workoutPlan;
 
     if (userData?.preferences) {
       userProfile = {
@@ -84,6 +86,12 @@ const Chat: React.FC = () => {
       };
     }
 
+    const workoutPlanDoc = doc(db, 'userWorkouts', user?.uid!);
+    const workoutPlanSnapshot = await getDoc(workoutPlanDoc);
+    if (workoutPlanSnapshot.exists()) {
+      workoutPlan = workoutPlanSnapshot.data();
+    }
+
     try {
       const messageHistoryForApi = messages.map(msg => ({
         role: msg.role === 'user' ? 'user' : 'model',
@@ -95,7 +103,7 @@ const Chat: React.FC = () => {
         content: content,
       });
 
-      response = await getChatResponse(messageHistoryForApi, userProfile, imageData);
+      response = await getChatResponse(messageHistoryForApi, userProfile, workoutPlan, imageData);
 
       // Check if response contains any action markers
       const containsAction = ACTION_MARKERS.some(marker => response.includes(marker));
@@ -140,6 +148,8 @@ const Chat: React.FC = () => {
                   actionMessage = "Updated your workout day. To see your changes, go to the Workouts tab.";
                 } else if (marker === 'DELETE_WORKOUT_DAY') {
                   actionMessage = "Deleted a workout day from your account. To see your changes, go to the Workouts tab.";
+                } else if (marker === 'UPDATE_PROFILE') {
+                  actionMessage = "Updated your profile. To see your changes, go to the Settings tab.";
                 }
                 
                 actionMessages.push({
