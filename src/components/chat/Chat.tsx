@@ -22,6 +22,8 @@ interface UserProfile {
   age?: string;
   gender?: string;
   goals?: string[];
+  timeConstraints?: string;
+  availableSpaceEquipment?: string;
   medicalConditions?: string;
   injuries?: string;
   dietaryPreferences?: string;
@@ -73,6 +75,8 @@ const Chat: React.FC = () => {
         age: userData.preferences.age,
         gender: userData.preferences.gender,
         goals: userData.preferences.goals,
+        timeConstraints: userData.preferences.timeConstraints,
+        availableSpaceEquipment: userData.preferences.availableSpaceEquipment,
         medicalConditions: userData.preferences.medicalConditions,
         injuries: userData.preferences.injuries,
         dietaryPreferences: userData.preferences.dietaryPreferences,

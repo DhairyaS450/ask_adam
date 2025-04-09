@@ -19,6 +19,8 @@ interface UserPreferences {
   injuries: string;
   dietaryPreferences: string;
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
+  timeConstraints: string;
+  availableSpaceEquipment: string;
 }
 
 // Default preferences for new users or if data is missing
@@ -32,6 +34,8 @@ const defaultPreferences: UserPreferences = {
   injuries: '',
   dietaryPreferences: '',
   fitnessLevel: 'beginner',
+  timeConstraints: '',
+  availableSpaceEquipment: '',
 };
 
 // The main content component for the settings page
@@ -232,6 +236,42 @@ function SettingsPageContent() {
                     onChange={handleChange}
                     rows={3}
                     placeholder="What are you hoping to achieve with your fitness routine?"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Time Constraints */}
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
+                <h2 className="text-xl font-semibold border-b pb-2">Time Constraints</h2>
+                
+                <div>
+                  <label htmlFor="timeConstraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Time Constraints</label>
+                  <textarea
+                    id="timeConstraints"
+                    name="timeConstraints"
+                    value={preferences.timeConstraints}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder="e.g., 30 minutes/day, 3 times/week, specific days/times"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Available Space and Equipment */}
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
+                <h2 className="text-xl font-semibold border-b pb-2">Available Space & Equipment</h2>
+                
+                <div>
+                  <label htmlFor="availableSpaceEquipment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Space & Equipment</label>
+                  <textarea
+                    id="availableSpaceEquipment"
+                    name="availableSpaceEquipment"
+                    value={preferences.availableSpaceEquipment}
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="e.g., Commercial gym access, home gym with dumbbells and bands, only bodyweight"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
