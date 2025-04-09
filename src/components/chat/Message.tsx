@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { UserIcon } from '@heroicons/react/24/solid';
+import { UserIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -8,9 +8,31 @@ interface MessageProps {
   content: string;
   isUser: boolean;
   timestamp?: Date;
+  isActionConfirmation?: boolean;
 }
 
-const Message: React.FC<MessageProps> = ({ content, isUser, timestamp = new Date() }) => {
+const Message: React.FC<MessageProps> = ({ 
+  content, 
+  isUser, 
+  timestamp = new Date(),
+  isActionConfirmation = false
+}) => {
+  if (isActionConfirmation) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex justify-center mb-4"
+      >
+        <div className="flex items-center bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-full shadow-sm">
+          <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+          <p className="text-sm font-medium">{content}</p>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

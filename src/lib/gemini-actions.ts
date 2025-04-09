@@ -209,7 +209,7 @@ async function handleDeleteWorkoutDay(data: { id: string }) {
 
 // --- Action Parsing Logic ---
 
-const ACTION_MARKERS = [
+export const ACTION_MARKERS = [
   'CREATE_WORKOUT_DAY',
   'EDIT_WORKOUT_DAY',
   'DELETE_WORKOUT_DAY',

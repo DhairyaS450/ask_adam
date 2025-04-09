@@ -4,12 +4,15 @@ import ChatInput from './ChatInput';
 import { getChatResponse } from '@/lib/gemini';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { ACTION_MARKERS } from '@/lib/gemini-actions';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 export type ChatMessage = {
   id: string;
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
+  isActionConfirmation?: boolean;
 };
 
 interface UserProfile {
@@ -90,14 +93,91 @@ const Chat: React.FC = () => {
 
       response = await getChatResponse(messageHistoryForApi, userProfile, imageData);
 
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: response,
-        role: 'assistant',
-        timestamp: new Date(),
-      };
+      // Check if response contains any action markers
+      const containsAction = ACTION_MARKERS.some(marker => response.includes(marker));
+      
+      if (containsAction) {
+        // Process the response to extract actions and clean content
+        let cleanedContent = response;
+        const actionMessages: ChatMessage[] = [];
+        
+        // Process each action marker
+        for (const marker of ACTION_MARKERS) {
+          let markerIndex = cleanedContent.indexOf(marker);
+          
+          while (markerIndex !== -1) {
+            // Extract content before the marker
+            const contentBeforeMarker = cleanedContent.substring(0, markerIndex).trim();
+            
+            // Look for the JSON object that follows the marker
+            // It starts with '{' and ends with '}'
+            const jsonStartIndex = cleanedContent.indexOf('{', markerIndex);
+            if (jsonStartIndex !== -1) {
+              let bracketCount = 1;
+              let jsonEndIndex = jsonStartIndex + 1;
+              
+              // Find the matching closing bracket
+              while (bracketCount > 0 && jsonEndIndex < cleanedContent.length) {
+                if (cleanedContent[jsonEndIndex] === '{') bracketCount++;
+                if (cleanedContent[jsonEndIndex] === '}') bracketCount--;
+                jsonEndIndex++;
+              }
+              
+              if (bracketCount === 0) {
+                // We found the complete JSON object
+                // Remove it and the marker from the content
+                cleanedContent = contentBeforeMarker;
+                
+                // Create action confirmation message
+                let actionMessage = '';
+                if (marker === 'CREATE_WORKOUT_DAY') {
+                  actionMessage = "Created a workout day on your account. To see your changes, go to the Workouts tab.";
+                } else if (marker === 'EDIT_WORKOUT_DAY') {
+                  actionMessage = "Updated your workout day. To see your changes, go to the Workouts tab.";
+                } else if (marker === 'DELETE_WORKOUT_DAY') {
+                  actionMessage = "Deleted a workout day from your account. To see your changes, go to the Workouts tab.";
+                }
+                
+                actionMessages.push({
+                  id: (Date.now() + Math.random() * 1000).toString(),
+                  content: actionMessage,
+                  role: 'assistant',
+                  timestamp: new Date(),
+                  isActionConfirmation: true
+                });
+              }
+            }
+            
+            // Look for the next occurrence of this marker
+            markerIndex = cleanedContent.indexOf(marker, markerIndex + 1);
+          }
+        }
+        
+        // Add the main content message first if there's any content left
+        if (cleanedContent.trim()) {
+          const assistantMessage: ChatMessage = {
+            id: Date.now().toString(),
+            content: cleanedContent,
+            role: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, assistantMessage, ...actionMessages]);
+        } else {
+          // If no main content, just add the action messages
+          setMessages(prev => [...prev, ...actionMessages]);
+        }
+      } else {
+        // Regular message with no actions
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: response,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error('Error getting chat response:', error);
       
@@ -172,6 +252,7 @@ const Chat: React.FC = () => {
               content={message.content}
               isUser={message.role === 'user'}
               timestamp={message.timestamp}
+              isActionConfirmation={message.isActionConfirmation}
             />
           ))}
           {isLoading && <LoadingAnimation />}
