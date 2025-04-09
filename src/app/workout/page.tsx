@@ -8,20 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
-
-// Define data structures
-interface Exercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string | number; // Allow rep ranges like '8-12'
-}
-
-interface WorkoutDay {
-  id: string;
-  name: string; // e.g., "Push Day", "Pull Day"
-  exercises: Exercise[];
-}
+import { WorkoutDay, Exercise } from '@/app/types/workouts';
 
 export default function WorkoutsPage() {
   const { user, loading: authLoading } = useAuth();

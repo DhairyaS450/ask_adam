@@ -1,18 +1,4 @@
-// Define the structure of exercises and workout days, mirroring workout/page.tsx
-// TODO: Consider moving these types to a shared location
-interface Exercise {
-    id?: string; // ID might not be present initially if coming from Gemini
-    name: string;
-    sets: number;
-    reps: string | number;
-}
-
-interface WorkoutDay {
-    id?: string; // ID might not be present initially if coming from Gemini
-    name: string;
-    exercises: Exercise[];
-}
-
+import { WorkoutDay } from '@/app/types/workouts';
 import { db } from '@/lib/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
