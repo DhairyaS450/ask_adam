@@ -148,6 +148,31 @@ async function handleCreateWorkoutDay(data: WorkoutDay) {
   }
 }
 
+async function handleUpdateUserProfile(profileData: Record<string, any>) {
+  const user = auth.currentUser;
+  if (!user) {
+    console.error("No authenticated user found for updating profile.");
+    // Optionally throw an error or handle appropriately
+    return;
+  }
+
+  if (!profileData || Object.keys(profileData).length === 0) {
+      console.warn("Skipping UPDATE_USER_PROFILE: No data provided.", profileData);
+      return;
+  }
+
+  const userProfileRef = doc(db, "users", user.uid);
+
+  try {
+    // Use setDoc with merge: true to update existing fields or create the doc if it doesn't exist
+    await setDoc(userProfileRef, { preferences: profileData }, { merge: true });
+    console.log(`User profile updated successfully for user ${user.uid}`);
+  } catch (error) {
+    console.error(`Error updating user profile for user ${user.uid}:`, error);
+    // Optionally re-throw or handle the error based on application needs
+  }
+}
+
 async function handleEditWorkoutDay(data: WorkoutDay & { id: string }) {
   console.log('ACTION: EDIT_WORKOUT_DAY', data);
   
@@ -337,6 +362,10 @@ export function parseAndExecuteActions(responseText: string): string {
            } else {
                console.warn('Skipping DELETE_WORKOUT_DAY: Missing or invalid ID.', action.data);
            }
+          break;
+        case 'UPDATE_PROFILE':
+          // TODO: Add validation for action.data shape
+          await handleUpdateUserProfile(action.data as Record<string, any>);
           break;
         default:
           console.warn('Unknown action type:', action.type);

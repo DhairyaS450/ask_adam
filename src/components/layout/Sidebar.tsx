@@ -3,6 +3,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { X } from 'lucide-react'; // Using lucide-react for icons
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -10,6 +14,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const router = useRouter();
+
   return (
     <>
       {/* Overlay */}
@@ -96,9 +103,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </li>
           </ul>
           <div className="absolute bottom-4 left-4 right-4">
-             <button className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
+            {user ? (
+              <button onClick={() => signOut(auth)} className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
+                Logout
+              </button>
+            ) : (
+              <button onClick={() => router.push('/login-signup')} className="w-full px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
                 Get Started
-            </button>
+              </button>
+            )}
           </div>
         </div>
       </aside>
