@@ -7,7 +7,7 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header'; 
 import Sidebar from '@/components/layout/Sidebar';
-
+import { useRouter } from 'next/navigation';
 // Define the structure for user preferences
 interface UserPreferences {
   height: string;
@@ -40,7 +40,8 @@ const defaultPreferences: UserPreferences = {
 
 // The main content component for the settings page
 function SettingsPageContent() {
-  const { user, userData, loading: authLoading } = useAuth();
+  const { user, userData, loading: authLoading, refreshUserData } = useAuth();
+  const router = useRouter();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -107,20 +108,23 @@ function SettingsPageContent() {
     setSaveStatus('');
     const userDocRef = doc(db, 'users', user.uid);
     try {
-      // Update the 'preferences' field in the user's document
-      await updateDoc(userDocRef, {
-        preferences: preferences
-      });
+      // Create an object containing only the 'preferences' field to update
+      const updateData = { preferences };
+      await updateDoc(userDocRef, updateData);
       setSaveStatus('success');
-      console.log('Preferences updated successfully!');
-      // TODO: Consider updating AuthContext's userData locally for immediate reflection
+      console.log('Preferences saved successfully.');
+      await refreshUserData(); // Call refreshUserData here
+      console.log('AuthContext userData refreshed.');
+      router.push('/');
     } catch (error) {
-      console.error("Error updating preferences:", error);
+      console.error('Error saving preferences:', error);
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
-      // Hide status message after 3 seconds
-      setTimeout(() => setSaveStatus(''), 3000);
+      // Optionally hide success message after a delay
+      if (saveStatus === 'success') {
+        setTimeout(() => setSaveStatus(''), 3000); 
+      }
     }
   };
 

@@ -17,6 +17,17 @@ const Message: React.FC<MessageProps> = ({
   timestamp = new Date(),
   isActionConfirmation = false
 }) => {
+  // Define markdown components - reuse the link renderer
+  const markdownComponents: Components = {
+    a: ({ node, ...props }: any) => (
+      <a 
+        className="text-green-700 dark:text-green-300 font-medium hover:underline"
+        style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }} 
+        {...props} 
+      />
+    ),
+  };
+
   if (isActionConfirmation) {
     return (
       <motion.div
@@ -27,7 +38,15 @@ const Message: React.FC<MessageProps> = ({
       >
         <div className="flex items-center bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 px-4 py-2 rounded-full shadow-sm">
           <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-          <p className="text-sm font-medium">{content}</p>
+          {/* Use ReactMarkdown here */}
+          <div className="text-sm font-medium">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents} // Use the defined link renderer
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
         </div>
       </motion.div>
     );
@@ -65,9 +84,9 @@ const Message: React.FC<MessageProps> = ({
               }`}
           >
             {isUser ? (
-              <p className="whitespace-pre-wrap m-0">{content}</p>
+              <p className="whitespace-pre-wrap m-0 break-words">{content}</p>
             ) : (
-              <div className="markdown-content max-w-none">
+              <div className="markdown-content max-w-none break-words">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -86,7 +105,11 @@ const Message: React.FC<MessageProps> = ({
                       );
                     },
                     a: ({ node, ...props }: any) => (
-                      <a className="text-blue-600 dark:text-blue-400 hover:underline" {...props} />
+                      <a 
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                        style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }} 
+                        {...props} 
+                      />
                     ),
                     ul: ({ node, ...props }: any) => (
                       <ul className="list-disc pl-5 my-2" {...props} />

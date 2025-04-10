@@ -12,9 +12,14 @@ export type ChatMessage = {
   id: string;
   content: string;
   role: 'user' | 'assistant';
-  timestamp: Date;
+  timestamp: Date; // Keep as Date object for internal use
   isActionConfirmation?: boolean;
 };
+
+// Type for stored messages (dates as strings)
+interface StoredChatMessage extends Omit<ChatMessage, 'timestamp'> {
+  timestamp: string;
+}
 
 interface UserProfile {
   name?: string;
@@ -31,18 +36,55 @@ interface UserProfile {
   fitnessLevel?: 'beginner' | 'intermediate' | 'advanced';
 }
 
+const CHAT_STORAGE_KEY = 'adamChatMessages';
+
+const defaultInitialMessage: ChatMessage = {
+  id: '1',
+  content: "Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. However, to make it more personalized, you should go to the settings tab and check out your profile. How can I assist you today?",
+  role: 'assistant',
+  timestamp: new Date(),
+};
+
 const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      content: "Hi there! I'm Adam, your personal fitness assistant. I can help you create personalized workout plans, provide nutrition advice, and analyze your workout form. However, to make it more personalized, you should go to the settings tab and check out your profile. How can I assist you today?",
-      role: 'assistant',
-      timestamp: new Date(),
-    },
-  ]);
+  // Load messages directly in useState initializer
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window === 'undefined') { // Check if running on server
+      return [defaultInitialMessage];
+    }
+    try {
+      const storedMessages = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (storedMessages && storedMessages !== '[]') {
+        const parsedMessages: StoredChatMessage[] = JSON.parse(storedMessages);
+        return parsedMessages.map(msg => ({ // Return loaded messages
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+      } else {
+        return [defaultInitialMessage]; // Return default if storage empty
+      }
+    } catch (error) {
+      console.error('Error loading messages from local storage:', error);
+      return [defaultInitialMessage]; // Fallback to default message on error
+    }
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user, userData } = useAuth();
+
+  // Save messages to local storage whenever they change
+  useEffect(() => {
+    try {
+      // Convert Date objects to strings for JSON compatibility
+      const messagesToStore: StoredChatMessage[] = messages.map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messagesToStore));
+    } catch (error) {
+      console.error('Error saving messages to local storage:', error);
+    }
+  }, [messages]);
 
   useEffect(() => {
     scrollToBottom();
@@ -143,13 +185,13 @@ const Chat: React.FC = () => {
                 // Create action confirmation message
                 let actionMessage = '';
                 if (marker === 'CREATE_WORKOUT_DAY') {
-                  actionMessage = "Created a workout day on your account. To see your changes, go to the Workouts tab.";
+                  actionMessage = "Created a workout day on your account. To see your changes, go to the [Workouts tab](/workout).";
                 } else if (marker === 'EDIT_WORKOUT_DAY') {
-                  actionMessage = "Updated your workout day. To see your changes, go to the Workouts tab.";
+                  actionMessage = "Updated your workout day. To see your changes, go to the [Workouts tab](/workout).";
                 } else if (marker === 'DELETE_WORKOUT_DAY') {
-                  actionMessage = "Deleted a workout day from your account. To see your changes, go to the Workouts tab.";
+                  actionMessage = "Deleted a workout day from your account. To see your changes, go to the [Workouts tab](/workout).";
                 } else if (marker === 'UPDATE_PROFILE') {
-                  actionMessage = "Updated your profile. To see your changes, go to the Settings tab.";
+                  actionMessage = "Updated your profile. To see your changes, go to the [Settings tab](/settings).";
                 }
                 
                 actionMessages.push({
@@ -206,6 +248,13 @@ const Chat: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleClearChat = () => {
+    setMessages([defaultInitialMessage]);
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    // Optionally: You might want to immediately save the default message state back
+    // localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify([{...defaultInitialMessage, timestamp: defaultInitialMessage.timestamp.toISOString()}]));
   };
 
   const LoadingAnimation = () => {
@@ -277,6 +326,13 @@ const Chat: React.FC = () => {
       <div className="border-t border-gray-200 dark:border-gray-700 p-4">
         <div className="max-w-4xl mx-auto">
           <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+          {/* Add Clear Chat Button */}
+          <button
+            onClick={handleClearChat}
+            className="mt-2 text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none"
+          >
+            Clear Chat History
+          </button>
         </div>
       </div>
     </div>
