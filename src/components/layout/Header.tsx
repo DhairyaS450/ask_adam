@@ -16,7 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user } = useAuth();
   
   return (
-    <header className="w-full p-4 bg-white dark:bg-black text-gray-800 dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:relative">
+    <header className="w-full p-4 bg-white dark:bg-black text-gray-800 dark:text-white shadow-md fixed top-0 left-0 right-0 z-10 md:sticky">
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="relative w-10 h-10 overflow-hidden rounded-full">

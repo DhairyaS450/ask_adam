@@ -306,7 +306,7 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 rounded-lg max-h-[90vh] overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto">
           {messages.map((message) => (
