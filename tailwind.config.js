@@ -11,15 +11,18 @@ module.exports = {
         primary: {
           DEFAULT: '#4E57D4',
           dark: '#3A42B0',
+          darker: '#2563EB',
           light: '#7278E5',
         },
         secondary: {
           DEFAULT: '#3B82F6',
           dark: '#2563EB',
+          darker: '#1E293B',
           light: '#60A5FA',
         },
         fitness: {
           dark: '#1E293B',
+          darker: '#1E293B',
           light: '#F1F5F9',
           accent: '#38BDF8',
           warning: '#FBBF24',
