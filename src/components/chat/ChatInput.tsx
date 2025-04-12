@@ -141,7 +141,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           type="button"
           onClick={() => router.push('/form-check')}
           disabled={isLoading}
-          className="relative px-3 py-1 text-sm bg-primary-light dark:bg-primary-dark text-white rounded-full hover:bg-primary dark:hover:bg-primary-darker transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative px-3 py-1 text-sm bg-primary-light dark:bg-primary-dark text-black dark:text-white rounded-full hover:bg-primary dark:hover:bg-primary-darker transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Form Check Feature
           <ArrowUpRightIcon className="w-3 h-3" />
