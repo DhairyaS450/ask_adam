@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import AuthGuard from '@/components/auth/AuthGuard';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header'; 
 import Sidebar from '@/components/layout/Sidebar';
 import { useRouter } from 'next/navigation';
+
 // Define the structure for user preferences
 interface UserPreferences {
   height: string;
@@ -348,12 +348,11 @@ function SettingsPageContent() {
   );
 }
 
-// Default export wraps the content component with AuthGuard
+// Default export wraps the content component
 export default function SettingsPage() {
   return (
-    // AuthGuard ensures only logged-in users can access this page
-    <AuthGuard>
+    <div className="flex flex-col h-full">
       <SettingsPageContent />
-    </AuthGuard>
+    </div>
   );
 }
