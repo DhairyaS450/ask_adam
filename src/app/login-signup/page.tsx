@@ -18,6 +18,7 @@ export default function LoginSignupPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // State for T&C checkbox
   const router = useRouter();
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -29,6 +30,7 @@ export default function LoginSignupPage() {
       if (isLogin) {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
         console.log('Logged in:', userCredential.user);
+        router.push('/'); // Redirect existing users to home
       } else {
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
         console.log('Signed up:', userCredential.user);
@@ -44,8 +46,8 @@ export default function LoginSignupPage() {
             experienceLevel: 'beginner',
           }
         }, { merge: false }); // Use merge: false to avoid overwriting existing data if somehow signup runs again
+        router.push('/onboarding/step-1'); // Redirect NEW users to onboarding
       }
-      router.push('/'); // Redirect to home page after successful auth
     } catch (err: any) {
       console.error('Authentication error:', err);
       setError(err.message || 'Failed to authenticate');
@@ -78,8 +80,11 @@ export default function LoginSignupPage() {
               experienceLevel: 'beginner',
             }
          }, { merge: false });
+         router.push('/onboarding/step-1'); // Redirect NEW Google users to onboarding
+      } else {
+        console.log("Existing user detected via Google Sign-In.");
+        router.push('/'); // Redirect EXISTING Google users to home
       }
-      router.push('/');
     } catch (err: any) {
       console.error('Google Sign-In error:', err);
       // Handle specific errors like popup closed by user
@@ -94,6 +99,12 @@ export default function LoginSignupPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="w-full max-w-md p-8 space-y-6 bg-white text-black dark:bg-gray-800 dark:text-white rounded-lg shadow-md">
+        <h1 className="text-3xl font-bold text-center text-primary dark:text-primary-light mb-2">
+          Welcome to Ask ADAM
+        </h1>
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+          Your AI-powered personal fitness assistant.
+        </p>
         <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">
           {isLogin ? 'Login' : 'Sign Up'}
         </h2>
@@ -131,6 +142,29 @@ export default function LoginSignupPage() {
             />
           </div>
 
+          {!isLogin && (
+            <div className="flex items-center">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                required
+                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 dark:border-gray-600 rounded mr-2"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
+                I agree to the{' '}
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary-dark dark:hover:text-primary-light">
+                  Terms and Conditions
+                </a> and{' '}
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary-dark dark:hover:text-primary-light">
+                  Privacy Policy
+                </a>.
+              </label>
+            </div>
+          )}
+
           {error && (
             <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
           )}
@@ -138,8 +172,8 @@ export default function LoginSignupPage() {
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || (!isLogin && !agreedToTerms)} // Disable signup if terms not agreed
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed dark:disabled:bg-gray-600 dark:disabled:text-gray-400"
             >
               {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
             </button>

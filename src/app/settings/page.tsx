@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import Header from '@/components/layout/Header'; 
 import Sidebar from '@/components/layout/Sidebar';
 import { useRouter } from 'next/navigation';
+import { ArrowPathIcon, UserCircleIcon, HeartIcon, CalendarDaysIcon, ScaleIcon, Cog6ToothIcon, ArrowLeftOnRectangleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 // Define the structure for user preferences
 interface UserPreferences {
@@ -40,13 +41,16 @@ const defaultPreferences: UserPreferences = {
 
 // The main content component for the settings page
 function SettingsPageContent() {
-  const { user, userData, loading: authLoading, refreshUserData } = useAuth();
+  const { user, userData, loading: authLoading, refreshUserData, deleteAccount } = useAuth();
   const router = useRouter();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'' | 'success' | 'error'>('');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Effect to load user preferences when auth state is ready
   useEffect(() => {
@@ -127,6 +131,30 @@ function SettingsPageContent() {
       }
     }
   };
+
+  // --- Handle Account Deletion ---
+  const handleDeleteAccount = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsDeleting(true);
+    try {
+      const deleted = await deleteAccount(); // Call the function from context
+      if (deleted) {
+        // AuthGuard should handle redirect automatically as user becomes null.
+        // Optionally, force a redirect if needed:
+        // router.push('/login-signup');
+        // Alert is handled within deleteAccount function
+      } else {
+        // Deletion was cancelled or failed, alert is shown in context function
+      }
+    } catch (err: any) { 
+      // Catch potential errors not caught inside deleteAccount (less likely)
+      console.error("Error during account deletion process:", err);
+      setError(err.message || 'An unexpected error occurred during account deletion.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   // Show loading state while fetching auth or preferences
   if (isLoading || authLoading) {
@@ -329,7 +357,7 @@ function SettingsPageContent() {
               <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
                 <button
                   onClick={handleSave}
-                  disabled={isSaving}
+                  disabled={isSaving || isDeleting}
                   className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-black dark:text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
                 >
                   {isSaving ? 'Saving...' : 'Save Settings'}
@@ -337,6 +365,34 @@ function SettingsPageContent() {
                 <div className="text-sm h-5"> {/* Placeholder for status message alignment */}
                   {saveStatus === 'success' && <span className="text-green-600 dark:text-green-400">Saved successfully!</span>}
                   {saveStatus === 'error' && <span className="text-red-600 dark:text-red-400">Failed to save settings.</span>}
+                </div>
+              </div>
+
+              {/* --- Delete Account Section --- */}
+              <div className="mt-10 pt-6 border-t border-red-200 dark:border-red-700">
+                <h3 className="text-lg leading-6 font-medium text-red-600 dark:text-red-400 flex items-center">
+                  <ExclamationTriangleIcon className="h-6 w-6 mr-2" aria-hidden="true" />
+                  Danger Zone
+                </h3>
+                <div className="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
+                  <p>Deleting your account is permanent and cannot be undone. All your profile information and chat history will be lost.</p>
+                </div>
+                <div className="mt-5">
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={isSaving || isDeleting}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                        <>
+                          <ArrowPathIcon className="animate-spin h-5 w-5 mr-2" />
+                          Deleting...
+                        </>
+                      ) : (
+                         'Delete My Account'
+                      )}
+                  </button>
                 </div>
               </div>
 
