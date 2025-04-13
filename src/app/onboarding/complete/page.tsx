@@ -119,7 +119,7 @@ export default function OnboardingComplete() {
           </button>
           {/* Optional: Button for first workout suggestion? */}
           <button
-            onClick={() => { /* TODO: Trigger first workout suggestion in chat? */ }}
+            onClick={() => router.push('/')} // Navigate to dashboard for now
             className="flex-1 px-6 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
           >
             See a Sample Workout

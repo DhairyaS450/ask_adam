@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
 
@@ -45,12 +45,15 @@ export default function OnboardingStep6() {
     setLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        'preferences.injuries': injuries || null,
-        'preferences.medicalConditions': medicalConditions || null,
-        'preferences.otherLimitations': otherLimitations || null,
-        'preferences.onboardingComplete': true // Mark onboarding as complete
-      });
+      
+      const dataToSave = {
+        injuries: injuries || null,
+        medicalConditions: medicalConditions || null,
+        otherLimitations: otherLimitations || null,
+        onboardingComplete: true // Mark onboarding as complete
+      };
+      
+      await setDoc(userDocRef, { preferences: dataToSave }, { merge: true });
 
       // Navigate to the onboarding completion / Meet Adam step
       router.push('/onboarding/complete'); 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
 
@@ -61,11 +61,14 @@ export default function OnboardingStep3() {
     setLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        'preferences.primaryGoal': primaryGoal,
-        'preferences.secondaryGoal': secondaryGoal || null, // Store null if empty
-      });
+      
+      const dataToSave = {
+        primaryGoal: primaryGoal,
+        secondaryGoal: secondaryGoal || null // Save as null if empty
+      };
 
+      await setDoc(userDocRef, { preferences: dataToSave }, { merge: true });
+      
       router.push('/onboarding/step-4'); // Navigate to the next step
     } catch (err: any) {
       console.error('Error updating user profile:', err);

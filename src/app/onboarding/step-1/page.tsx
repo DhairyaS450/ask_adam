@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
 
@@ -34,14 +34,15 @@ export default function OnboardingStep1() {
     setLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      // Update the user document with the name
-      // We might want to merge this later if onboarding can be interrupted
-      await updateDoc(userDocRef, {
-        'preferences.firstName': firstName,
-        'preferences.lastName': lastName,
-        'preferences.name': `${firstName} ${lastName}` // Update the general 'name' as well
-      });
-      
+      // Use setDoc with merge: true to ensure document/preferences object exists
+      await setDoc(userDocRef, { 
+        preferences: { 
+          firstName: firstName,
+          lastName: lastName,
+          name: `${firstName} ${lastName}` // Update the general 'name' as well
+        }
+      }, { merge: true });
+
       // Navigate to the next step
       router.push('/onboarding/step-2'); 
     } catch (err: any) {

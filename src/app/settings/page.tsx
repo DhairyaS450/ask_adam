@@ -11,32 +11,60 @@ import { ArrowPathIcon, UserCircleIcon, HeartIcon, CalendarDaysIcon, ScaleIcon, 
 
 // Define the structure for user preferences
 interface UserPreferences {
-  height: string;
-  weight: string;
-  age: string;
-  gender: string;
-  goals: string;
-  medicalConditions: string;
-  injuries: string;
-  dietaryPreferences: string;
-  fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
-  timeConstraints: string;
-  availableSpaceEquipment: string;
+  // From Step 1
+  firstName?: string;
+  lastName?: string;
+  name?: string; // Combined name
+  // From Step 2
+  age?: number | null;
+  gender?: string;
+  height?: number | { ft: number; in: number; } | null; // Can be number (cm) or object (ft/in)
+  heightUnit?: 'cm' | 'ft';
+  weight?: number | null;
+  weightUnit?: 'kg' | 'lbs';
+  // From Step 3
+  primaryGoal?: string;
+  secondaryGoal?: string | null;
+  // From Step 4
+  activityLevel?: string; // Consider enum: 'sedentary', 'lightly_active', etc.
+  availableDays?: string[]; // Array of day names
+  workoutDuration?: string; // Consider enum: '30_mins', '1_hour', etc.
+  // From Step 5
+  availableEquipment?: string[]; // Array of equipment names
+  hasGymMembership?: boolean;
+  // From Step 6
+  injuries?: string | null;
+  medicalConditions?: string | null;
+  otherLimitations?: string | null;
+  onboardingComplete?: boolean;
+  
+  // Original/other settings fields (ensure they are kept if needed)
+  theme?: string; // Example from signup default
 }
 
 // Default preferences for new users or if data is missing
-const defaultPreferences: UserPreferences = {
-  height: '',
-  weight: '',
-  age: '',
+const defaultPreferences: Partial<UserPreferences> = { // Use Partial as not all fields might be set initially
+  firstName: '',
+  lastName: '',
+  name: '',
+  age: null,
   gender: '',
-  goals: '',
-  medicalConditions: '',
-  injuries: '',
-  dietaryPreferences: '',
-  fitnessLevel: 'beginner',
-  timeConstraints: '',
-  availableSpaceEquipment: '',
+  height: null,
+  heightUnit: 'ft',
+  weight: null,
+  weightUnit: 'lbs',
+  primaryGoal: '',
+  secondaryGoal: null,
+  activityLevel: '',
+  availableDays: [],
+  workoutDuration: '',
+  availableEquipment: [],
+  hasGymMembership: false,
+  injuries: null,
+  medicalConditions: null,
+  otherLimitations: null,
+  onboardingComplete: false,
+  theme: 'system',
 };
 
 // The main content component for the settings page
@@ -57,6 +85,7 @@ function SettingsPageContent() {
     if (!authLoading && user) {
       // Prioritize userData from context if available
       if (userData?.preferences) {
+        console.log("Loading preferences from AuthContext:", userData.preferences);
         // Merge defaults with loaded data to ensure all fields are present
         setPreferences({ ...defaultPreferences, ...userData.preferences });
         setIsLoading(false);
@@ -68,12 +97,15 @@ function SettingsPageContent() {
           try {
             const docSnap = await getDoc(userDocRef);
             if (docSnap.exists() && docSnap.data()?.preferences) {
+               console.log("Loading preferences from Firestore:", docSnap.data().preferences);
                setPreferences({ ...defaultPreferences, ...docSnap.data().preferences });
             } else {
+              console.log("No preferences found in Firestore, using defaults.");
               // Use defaults if no document or preferences field exists
               setPreferences(defaultPreferences);
               // Optionally, save these defaults back to Firestore if the doc exists but prefs don't
               if (docSnap.exists()) {
+                  console.log("Saving default preferences back to Firestore.");
                   await updateDoc(userDocRef, { preferences: defaultPreferences });
               }
             }
@@ -98,11 +130,73 @@ function SettingsPageContent() {
     setSidebarOpen(!isSidebarOpen);
   };
 
-  // Generic handler for input/select/textarea changes
+  // Handler for input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setPreferences(prev => prev ? { ...prev, [name]: value } : null);
-    if (saveStatus) setSaveStatus(''); // Clear save status on change
+    const { name, value, type } = e.target;
+    console.log(`handleChange - Name: ${name}, Value: ${value}, Type: ${type}`); // Log input changes
+
+    setPreferences(prev => {
+      if (!prev) return prev; // Should ideally not happen if initialized
+
+      let newValue: any = value;
+
+      // --- Type Conversions --- 
+      // Convert empty string to null for optional number fields
+      if ((name === 'age' || name === 'weight' || name === 'heightCm' || name === 'heightFt' || name === 'heightIn') && value === '') {
+        newValue = null;
+      }
+      // Convert to number for number inputs (if not null)
+      else if (type === 'number' && newValue !== null) {
+        newValue = parseFloat(value);
+        if (isNaN(newValue)) newValue = null; // Handle non-numeric input in number fields
+      }
+      // Convert string 'true'/'false' back to boolean for selects
+      else if (name === 'hasGymMembership') {
+        newValue = value === 'true';
+      }
+      // Convert comma-separated string to array for specific fields
+      else if (name === 'availableDays' || name === 'availableEquipment') {
+        // Split by comma, trim whitespace, filter out empty strings
+        newValue = value.split(',').map(item => item.trim()).filter(Boolean);
+      } 
+
+      // --- State Update Logic --- 
+      const updatedPrefs = { ...prev };
+
+      // Handle height updates based on unit and specific input name
+      if (name === 'heightUnit') {
+         updatedPrefs.heightUnit = value as 'ft' | 'cm';
+         // Reset height value when unit changes to avoid inconsistency
+         updatedPrefs.height = null;
+      } else if (name === 'heightCm') {
+          // Only update if unit is 'cm'
+          if (updatedPrefs.heightUnit === 'cm') {
+             updatedPrefs.height = newValue; // Should be number or null
+          }
+      } else if (name === 'heightFt' || name === 'heightIn') {
+          // Only update if unit is 'ft'
+          if (updatedPrefs.heightUnit === 'ft') {
+              const currentHeight = typeof prev.height === 'object' && prev.height !== null ? { ...prev.height } : { ft: null, in: null };
+              if (name === 'heightFt') {
+                  currentHeight.ft = newValue; // number or null
+              } else { // heightIn
+                  currentHeight.in = newValue; // number or null
+              }
+              // Store as object only if at least one value is present
+              updatedPrefs.height = (currentHeight.ft !== null || currentHeight.in !== null) ? currentHeight : null;
+          }
+      } else {
+          // Standard update for other fields
+          // Use type assertion for safety if needed, but direct assignment is often fine
+          (updatedPrefs as any)[name] = newValue;
+      }
+
+      console.log("Updated preferences state:", updatedPrefs); // Log state after update
+      return updatedPrefs;
+    });
+
+    // Reset save status on any change
+    setSaveStatus('');
   };
 
   // Function to save preferences to Firestore
@@ -114,6 +208,7 @@ function SettingsPageContent() {
     try {
       // Create an object containing only the 'preferences' field to update
       const updateData = { preferences };
+      console.log("Saving preferences:", updateData); // Log data before saving
       await updateDoc(userDocRef, updateData);
       setSaveStatus('success');
       console.log('Preferences saved successfully.');
@@ -185,24 +280,24 @@ function SettingsPageContent() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="height" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Height (cm)</label>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
                     <input
-                      type="number"
-                      id="height"
-                      name="height"
-                      value={preferences.height}
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      value={preferences.firstName ?? ''} // Handle potential undefined
                       onChange={handleChange}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Weight (kg)</label>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
                     <input
-                      type="number"
-                      id="weight"
-                      name="weight"
-                      value={preferences.weight}
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      value={preferences.lastName ?? ''} // Handle potential undefined
                       onChange={handleChange}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
@@ -214,7 +309,7 @@ function SettingsPageContent() {
                       type="number"
                       id="age"
                       name="age"
-                      value={preferences.age}
+                      value={preferences.age ?? ''} // Handle null/undefined
                       onChange={handleChange}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
@@ -225,7 +320,7 @@ function SettingsPageContent() {
                     <select
                       id="gender"
                       name="gender"
-                      value={preferences.gender}
+                      value={preferences.gender ?? ''} // Handle undefined
                       onChange={handleChange}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     >
@@ -245,31 +340,76 @@ function SettingsPageContent() {
                 <h2 className="text-xl font-semibold border-b pb-2">Fitness Profile</h2>
                 
                 <div>
-                  <label htmlFor="fitnessLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fitness Level</label>
+                  <label htmlFor="primaryGoal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Primary Goal</label>
+                  <input
+                    type="text"
+                    id="primaryGoal"
+                    name="primaryGoal"
+                    value={preferences.primaryGoal ?? ''} // Handle undefined
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="secondaryGoal" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Secondary Goal</label>
+                  <input
+                    type="text"
+                    id="secondaryGoal"
+                    name="secondaryGoal"
+                    value={preferences.secondaryGoal ?? ''} // Handle null/undefined
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="activityLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Activity Level</label>
                   <select
-                    id="fitnessLevel"
-                    name="fitnessLevel"
-                    value={preferences.fitnessLevel}
+                    id="activityLevel"
+                    name="activityLevel"
+                    value={preferences.activityLevel ?? ''} // Handle undefined
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   >
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
+                    <option value="">Select...</option>
+                    <option value="sedentary">Sedentary</option>
+                    <option value="lightly_active">Lightly Active</option>
+                    <option value="moderately_active">Moderately Active</option>
+                    <option value="very_active">Very Active</option>
+                    <option value="extra_active">Extra Active</option>
                   </select>
                 </div>
                 
                 <div>
-                  <label htmlFor="goals" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fitness Goals</label>
-                  <textarea
-                    id="goals"
-                    name="goals"
-                    value={preferences.goals}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="What are you hoping to achieve with your fitness routine?"
+                  <label htmlFor="availableDays" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Days (comma-separated)</label>
+                  {/* TEMP FIX: Using text input for array. Needs better UI (e.g., checkboxes) */}
+                  <input 
+                    type="text"
+                    id="availableDays"
+                    name="availableDays"
+                    value={preferences.availableDays?.join(', ') ?? ''} // Join array for display, handle undefined
+                    onChange={handleChange} // TODO: Update handleChange to parse comma-separated string back to array
+                    placeholder="e.g., Monday, Wednesday, Friday"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
+                </div>
+                
+                <div>
+                  <label htmlFor="workoutDuration" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Workout Duration Preference</label>
+                  <select
+                    id="workoutDuration"
+                    name="workoutDuration"
+                    value={preferences.workoutDuration ?? ''} // Handle undefined
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="">Select...</option>
+                    <option value="30_mins">30 minutes</option>
+                    <option value="1_hour">1 hour</option>
+                    <option value="1.5_hours">1.5 hours</option>
+                    <option value="2_hours">2 hours</option>
+                  </select>
                 </div>
               </div>
 
@@ -278,34 +418,32 @@ function SettingsPageContent() {
                 <h2 className="text-xl font-semibold border-b pb-2">Time Constraints</h2>
                 
                 <div>
-                  <label htmlFor="timeConstraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Time Constraints</label>
-                  <textarea
-                    id="timeConstraints"
-                    name="timeConstraints"
-                    value={preferences.timeConstraints}
-                    onChange={handleChange}
-                    rows={2}
-                    placeholder="e.g., 30 minutes/day, 3 times/week, specific days/times"
+                  <label htmlFor="availableEquipment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Equipment (comma-separated)</label>
+                   {/* TEMP FIX: Using text input for array. Needs better UI (e.g., checkboxes) */}
+                  <input
+                    type="text"
+                    id="availableEquipment"
+                    name="availableEquipment"
+                    value={preferences.availableEquipment?.join(', ') ?? ''} // Join array for display, handle undefined
+                    onChange={handleChange} // TODO: Update handleChange to parse comma-separated string back to array
+                    placeholder="e.g., Dumbbells, Resistance Bands"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
-              </div>
-
-              {/* Available Space and Equipment */}
-              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
-                <h2 className="text-xl font-semibold border-b pb-2">Available Space & Equipment</h2>
                 
                 <div>
-                  <label htmlFor="availableSpaceEquipment" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Available Space & Equipment</label>
-                  <textarea
-                    id="availableSpaceEquipment"
-                    name="availableSpaceEquipment"
-                    value={preferences.availableSpaceEquipment}
+                  <label htmlFor="hasGymMembership" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gym Membership?</label>
+                  <select
+                    id="hasGymMembership"
+                    name="hasGymMembership"
+                    value={preferences.hasGymMembership === undefined ? '' : String(preferences.hasGymMembership)} // Convert boolean/undefined to string
                     onChange={handleChange}
-                    rows={3}
-                    placeholder="e.g., Commercial gym access, home gym with dumbbells and bands, only bodyweight"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
+                  >
+                    <option value="">Select...</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
                 </div>
               </div>
 
@@ -314,11 +452,24 @@ function SettingsPageContent() {
                 <h2 className="text-xl font-semibold border-b pb-2">Health Information</h2>
                 
                 <div>
+                  <label htmlFor="injuries" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Injuries</label>
+                  <textarea
+                    id="injuries"
+                    name="injuries"
+                    value={preferences.injuries ?? ''} // Handle null/undefined
+                    onChange={handleChange}
+                    rows={3}
+                    placeholder="Please list any injuries that might affect your fitness routine"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                
+                <div>
                   <label htmlFor="medicalConditions" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Medical Conditions</label>
                   <textarea
                     id="medicalConditions"
                     name="medicalConditions"
-                    value={preferences.medicalConditions}
+                    value={preferences.medicalConditions ?? ''} // Handle null/undefined
                     onChange={handleChange}
                     rows={3}
                     placeholder="Please list any medical conditions that might affect your fitness routine"
@@ -327,27 +478,14 @@ function SettingsPageContent() {
                 </div>
                 
                 <div>
-                  <label htmlFor="injuries" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Injuries or Limitations</label>
+                  <label htmlFor="otherLimitations" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Other Limitations</label>
                   <textarea
-                    id="injuries"
-                    name="injuries"
-                    value={preferences.injuries}
+                    id="otherLimitations"
+                    name="otherLimitations"
+                    value={preferences.otherLimitations ?? ''} // Handle null/undefined
                     onChange={handleChange}
                     rows={3}
-                    placeholder="Any injuries or physical limitations we should be aware of?"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="dietaryPreferences" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dietary Preferences</label>
-                  <textarea
-                    id="dietaryPreferences"
-                    name="dietaryPreferences"
-                    value={preferences.dietaryPreferences}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Any dietary preferences or restrictions?"
+                    placeholder="Please list any other limitations that might affect your fitness routine"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>

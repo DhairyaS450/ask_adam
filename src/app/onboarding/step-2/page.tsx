@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
 
@@ -81,22 +81,17 @@ export default function OnboardingStep2() {
     setLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
+      
+      const dataToSave = {
+        age: age ? parseInt(age, 10) : null,
+        gender: gender,
+        height: heightUnit === 'cm' ? (heightValue1 ? parseInt(heightValue1, 10) : null) : (heightValue1 && heightValue2 ? { ft: parseInt(heightValue1, 10), in: parseInt(heightValue2, 10) } : null),
+        heightUnit: heightUnit,
+        weight: weightValue ? parseFloat(weightValue) : null,
+        weightUnit: weightUnit,
+      };
 
-      let heightData = {};
-      if (heightUnit === 'cm') {
-        heightData = { value: parseInt(heightValue1, 10), unit: 'cm' };
-      } else {
-        heightData = { feet: parseInt(heightValue1, 10), inches: parseInt(heightValue2, 10), unit: 'ft' };
-      }
-
-      const weightData = { value: parseFloat(weightValue), unit: weightUnit };
-
-      await updateDoc(userDocRef, {
-        'preferences.age': parseInt(age, 10),
-        'preferences.gender': gender,
-        'preferences.height': heightData,
-        'preferences.weight': weightData,
-      });
+      await setDoc(userDocRef, { preferences: dataToSave }, { merge: true });
 
       router.push('/onboarding/step-3'); // Navigate to the next step
     } catch (err: any) {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
 
@@ -75,11 +75,15 @@ export default function OnboardingStep4() {
     setLoading(true);
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, {
-        'preferences.activityLevel': activityLevel,
-        'preferences.availableDays': availableDays,
-        'preferences.workoutDuration': workoutDuration,
-      });
+
+      const dataToSave = {
+        activityLevel: activityLevel,
+        availableDays: availableDays,
+        workoutDuration: workoutDuration
+      };
+
+      await setDoc(userDocRef, { preferences: dataToSave }, { merge: true });
+      console.log(await getDoc(userDocRef))
 
       router.push('/onboarding/step-5'); // Navigate to the next step
     } catch (err: any) {

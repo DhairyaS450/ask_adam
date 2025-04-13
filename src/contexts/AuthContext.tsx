@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged, deleteUser } from 'firebase/auth';
-import { doc, getDoc, deleteDoc, DocumentData } from 'firebase/firestore';
+import { doc, deleteDoc, DocumentData, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase'; // Assuming firebase config is exported from here
 
 interface AuthContextType {
@@ -20,47 +20,76 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Function to fetch user data from Firestore
-  const fetchUserData = async (userId: string) => {
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists()) {
-        setUserData(docSnap.data());
-        console.log("User data fetched:", docSnap.data());
-      } else {
-        console.log("No user data found in Firestore for UID:", userId);
-        setUserData(null); // Reset if no data found
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setUserData(null);
-    }
-  };
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    let unsubscribeFirestore: Unsubscribe | null = null; // Variable to hold the Firestore listener unsubscribe function
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
-        await fetchUserData(currentUser.uid); // Use the fetch function
-      } else {
-        setUserData(null); // Clear user data on logout
+      
+      // Clean up previous Firestore listener if it exists
+      if (unsubscribeFirestore) {
+        console.log("Unsubscribing from previous Firestore listener.");
+        unsubscribeFirestore();
+        unsubscribeFirestore = null; // Reset variable
       }
-      setLoading(false);
+
+      if (currentUser) {
+        setLoading(true); // Start loading when setting up new listener
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        console.log("Setting up Firestore listener for UID:", currentUser.uid);
+        
+        // Set up the real-time listener
+        unsubscribeFirestore = onSnapshot(userDocRef, 
+          (docSnap) => {
+            if (docSnap.exists()) {
+              setUserData(docSnap.data());
+              console.log("AuthContext: User data updated from snapshot:", docSnap.data());
+            } else {
+              console.log("AuthContext: No user data found in Firestore for UID:", currentUser.uid);
+              setUserData(null); // Reset if no data found
+            }
+            setLoading(false); // Stop loading once data (or lack thereof) is confirmed
+          }, 
+          (error) => {
+            console.error("AuthContext: Error fetching user data snapshot:", error);
+            setUserData(null);
+            setLoading(false); // Stop loading on error
+          }
+        );
+      } else {
+        // No user logged in
+        setUserData(null); // Clear user data
+        setLoading(false); // Stop loading
+      }
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+    // Cleanup function for the main useEffect
+    return () => {
+      console.log("Cleaning up AuthContext listeners.");
+      unsubscribeAuth(); // Unsubscribe from auth state changes
+      // Unsubscribe from Firestore listener if it's active
+      if (unsubscribeFirestore) {
+        console.log("Unsubscribing from active Firestore listener during cleanup.");
+        unsubscribeFirestore();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-  // Manual refresh function
+  // Manual refresh function - might be less necessary with onSnapshot, but can keep for explicit refresh scenarios
   const refreshUserData = async () => {
-    if (user) {
-      setLoading(true); // Optional: Indicate loading during refresh
-      await fetchUserData(user.uid);
-      setLoading(false);
+    // With onSnapshot, data should be up-to-date. 
+    // This function might now be redundant or could force a re-fetch if needed, 
+    // but onSnapshot usually handles it.
+    console.log("refreshUserData called - data should be live via onSnapshot.");
+    if (user && !loading) {
+        // Optionally, you could re-trigger the fetch logic here if needed,
+        // but usually not required with onSnapshot.
+        // Example: Force re-fetch (though snapshot should handle it)
+        // setLoading(true);
+        // const userDocRef = doc(db, 'users', user.uid);
+        // try { ... getDoc ... } finally { setLoading(false); }
     } else {
-      console.log("Cannot refresh user data: no user logged in.");
+      console.log("Cannot refresh user data: no user logged in or already loading.");
     }
   };
 
