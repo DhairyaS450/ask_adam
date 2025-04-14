@@ -18,6 +18,7 @@ const eslintConfig = [
       '@typescript-eslint/no-explicit-any': 'warn', // Set no-explicit-any to warn
       '@typescript-eslint/no-unused-vars': 'warn',  // Set no-unused-vars to warn
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',
+      'react/no-unescaped-entities': 'warn',
     },
   },
 ];
