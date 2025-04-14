@@ -135,17 +135,20 @@ const getGeminiAPI = () => {
 // Function to get a response from Gemini for text and images
 export async function getChatResponse(messages: any[], userProfile: any, workoutPlan: any, imageData?: string) {
   try {
-    const genAI = getGeminiAPI();
+  const genAI = getGeminiAPI();
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.0-flash', 
       systemInstruction: ADAM_SYSTEM_PROMPT 
     }); 
     
+    const formattedUserProfile = JSON.stringify(userProfile, null, 2);
+    const formattedWorkoutPlan = JSON.stringify(workoutPlan, null, 2);
+
     const historyMessages = messages.filter(msg => msg.role !== 'model' || messages.indexOf(msg) !== 0);
     
     let lastUserMessageContent = messages.length > 0 ? messages[messages.length - 1].content : "";
-    lastUserMessageContent += JSON.stringify(userProfile)
-    lastUserMessageContent += JSON.stringify(workoutPlan)
+    lastUserMessageContent += formattedUserProfile
+    lastUserMessageContent += formattedWorkoutPlan
     console.log(lastUserMessageContent)
     
     const messageParts: (string | Part)[] = [lastUserMessageContent || "Analyze the provided media."];
@@ -161,7 +164,7 @@ export async function getChatResponse(messages: any[], userProfile: any, workout
     if (historyMessages.length > 0) {
       const chat = model.startChat({
         history: historyMessages.slice(0, -1).map(msg => ({
-          role: msg.role,
+          role: msg.role, 
           parts: [{ text: msg.content }],
         })),
         generationConfig: {
@@ -181,6 +184,7 @@ export async function getChatResponse(messages: any[], userProfile: any, workout
       const result = await model.generateContent(messageParts);
       const response = await result.response;
       const text = response.text();
+      parseAndExecuteActions(text); // Assuming this parses actions from the response text
       return text;
     }
   } catch (error) {

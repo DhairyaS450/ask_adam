@@ -108,24 +108,37 @@ const Chat: React.FC = () => {
     setIsLoading(true);
 
     let response = "";
-    let userProfile: UserProfile | null = null;
-    let workoutPlan;
+    let userProfile: UserProfile | null = null; 
+    let workoutPlan; 
 
+    // Construct userProfile object from userData.preferences if available
     if (userData?.preferences) {
-      userProfile = {
-        name: userData.preferences.name,
-        height: userData.preferences.height,
-        weight: userData.preferences.weight,
-        age: userData.preferences.age,
-        gender: userData.preferences.gender,
-        goals: userData.preferences.goals,
-        timeConstraints: userData.preferences.timeConstraints,
-        availableSpaceEquipment: userData.preferences.availableSpaceEquipment,
-        medicalConditions: userData.preferences.medicalConditions,
-        injuries: userData.preferences.injuries,
-        dietaryPreferences: userData.preferences.dietaryPreferences,
-        fitnessLevel: userData.preferences.fitnessLevel,
-      };
+        const prefs = userData.preferences;
+        userProfile = {
+            // Basic Info
+            name: prefs.firstName, // Use firstName as the primary name
+            age: prefs.age ? String(prefs.age) : undefined, // Convert age to string if exists
+            gender: prefs.gender,
+            // Physical Characteristics - handle complex height/weight
+            height: typeof prefs.height === 'object' && prefs.height?.ft 
+                      ? `${prefs.height.ft}ft ${prefs.height.in ?? 0}in` 
+                      : typeof prefs.height === 'number' 
+                      ? `${prefs.height}cm`
+                      : undefined,
+            weight: prefs.weight ? `${prefs.weight}${prefs.weightUnit ?? 'lbs'}` : undefined,
+            // Goals
+            goals: [prefs.primaryGoal, prefs.secondaryGoal].filter(Boolean) as string[], // Combine goals, filter empty
+            // Activity & Time
+            fitnessLevel: prefs.activityLevel, // Map activityLevel to fitnessLevel
+            timeConstraints: `${prefs.workoutDuration ?? 'any'} duration, on ${prefs.availableDays?.join(', ') ?? 'any day'}`, // Combine duration/days
+            // Equipment & Environment
+            availableSpaceEquipment: `${prefs.availableEquipment?.join(', ') ?? 'None specified'}. ${prefs.hasGymMembership ? 'Has gym membership.' : 'No gym membership.'}`,
+            // Medical/Limitations (Combine into single fields for simplicity in prompt)
+            medicalConditions: [prefs.medicalConditions, prefs.otherLimitations].filter(Boolean).join('; ') || undefined,
+            injuries: prefs.injuries || undefined,
+            // Dietary preferences seem missing from UserPreferences, keep undefined for now
+            dietaryPreferences: undefined,
+        };
     }
 
     const workoutPlanDoc = doc(db, 'userWorkouts', user?.uid!);
